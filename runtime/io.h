@@ -12,83 +12,124 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Defines API between compiled code and I/O runtime library.
+
 #ifndef FORTRAN_RUNTIME_IO_H_
 #define FORTRAN_RUNTIME_IO_H_
 
+#include "entry-names.h"
+#include <cinttypes>
 #include <cstddef>
-
-// Prefix external names with a library version
-#define F18IO(n) __F18IOa_##n
 
 namespace Fortran::runtime {
 class Descriptor;
+class NamelistGroup;
 };
 
 namespace Fortran::runtime::IO {
 
 class IOStatementState;
-class NamelistGroup;
 using Cookie = IOStatementState *;
 using ExternalUnit = int;
+using AsynchronousId = int;
 static constexpr ExternalUnit DefaultUnit{-1};  // READ(*), WRITE(*), PRINT
 
 extern "C" {
 
+#define IONAME(n) RTNAME(IO_##n)
+
 // These function initiate data transfer statements (READ, WRITE, PRINT).
-// Internal I/O can loan the runtime library an optional block of memory
-// in which to maintain state across the calls that implement the transfer;
-// use of these blocks can reduce the need for dynamic memory allocation
-// &/or thread-local storage.
-// Example: PRINT *, 666 is implemented as
+// Example: PRINT *, 666 is implemented as the series of calls:
 //   Cookie cookie{BeginExternalListOutput(DefaultUnit)};
 //   OutputInteger64(cookie, 666);
 //   EndIOStatement(cookie);
 
-Cookie F18IO(BeginExternalListOutput)(ExternalUnit);
-Cookie F18IO(BeginInternalListOutput)(char *internal, std::size_t,
-                                      void *scratch, std::size_t);
-Cookie F18IO(BeginExternalFormattedOutput)(ExternalUnit,
+// Internal I/O initiation
+// Internal I/O can loan the runtime library an optional block of memory
+// in which to maintain state across the calls that implement the transfer;
+// use of these blocks can reduce the need for dynamic memory allocation
+// &/or thread-local storage.
+Cookie IONAME(BeginInternalListOutput)(
+  char *internal, std::size_t bytes, int characterKind = 1,
+  void **scratchArea = nullptr, std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalListInput)(
+  char *internal, std::size_t bytes, int characterKind = 1,
+  void **scratchArea = nullptr, std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalFormattedOutput)(
+  char *internal, std::size_t bytes,
+  const char *format, std::size_t formatBytes,
+  int characterKind = 1,
+  void **scratchArea = nullptr, std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalFormattedInput)(
+  char *internal, std::size_t bytes,
+  const char *format, std::size_t formatBytes,
+  int characterKind = 1,
+  void **scratchArea = nullptr, std::size_t scratchBytes = 0);
+
+// External synchronous I/O initiation
+Cookie IONAME(BeginExternalListOutput)(ExternalUnit);
+Cookie IONAME(BeginExternalListInput)(ExternalUnit);
+Cookie IONAME(BeginExternalFormattedOutput)(ExternalUnit,
                                            const char *format, std::size_t);
-Cookie F18IO(BeginInternalFormattedOutput)(char *internal, std::size_t,
-    const char *format, std::size_t, void *scratch, std::size_t);
-Cookie F18IO(BeginUnformattedOutput)(ExternalUnit);
-Cookie F18IO(BeginNamelistOutput)(ExternalUnit, const NamelistGroup &);
-// The "Input" routines have the same signatures, with const internal units.
+Cookie IONAME(BeginExternalFormattedInput)(ExternalUnit,
+                                           const char *format, std::size_t);
+Cookie IONAME(BeginUnformattedOutput)(ExternalUnit);
+Cookie IONAME(BeginUnformattedInput)(ExternalUnit);
+Cookie IONAME(BeginNamelistOutput)(ExternalUnit, const NamelistGroup &);
+Cookie IONAME(BeginNamelistInput)(ExternalUnit, const NamelistGroup &);
+
+// Asynchronous I/O is supported (at most) for unformatted direct access
+// block transfers.
+AsynchronousID IONAME(BeginAsynchronousOutput)(ExternalUnit, std::int64_t REC, const char *, std::size_t);
+AsynchronousID IONAME(BeginAsynchronousInput)(ExternalUnit, std::int64_t REC, char *, std::size_t);
+Cookie IONAME(WaitForAsynchronousIO)(ExternalUnit, AsynchronousID);  // WAIT
+
+// Other I/O statements
+// TODO: OPEN & INQUIRE
+Cookie IONAME(BeginClose)(ExternalUnit);
+Cookie IONAME(BeginFlush)(ExternalUnit);
+Cookie IONAME(BeginBackspace)(ExternalUnit);
+Cookie IONAME(BeginEndfile)(ExternalUnit);
+Cookie IONAME(BeginRewind)(ExternalUnit);
 
 // Control list options
-void F18IO(SetADVANCE)(Cookie, const char *, std::size_t);
-void F18IO(SetBLANK)(Cookie, const char *, std::size_t);
-void F18IO(SetDECIMAL)(Cookie, const char *, std::size_t);
-void F18IO(SetDELIM)(Cookie, const char *, std::size_t);
-void F18IO(SetPAD)(Cookie, const char *, std::size_t);
-void F18IO(SetPOS)(Cookie, std::int64_t);
-void F18IO(SetREC)(Cookie, std::int64_t);
-void F18IO(SetROUND)(Cookie, const char *, std::size_t);
-void F18IO(SetSIGN)(Cookie, const char *, std::size_t);
+void IONAME(SetADVANCE)(Cookie, const char *, std::size_t);
+void IONAME(SetBLANK)(Cookie, const char *, std::size_t);
+void IONAME(SetDECIMAL)(Cookie, const char *, std::size_t);
+void IONAME(SetDELIM)(Cookie, const char *, std::size_t);
+void IONAME(SetPAD)(Cookie, const char *, std::size_t);
+void IONAME(SetPOS)(Cookie, std::int64_t);
+void IONAME(SetREC)(Cookie, std::int64_t);
+void IONAME(SetROUND)(Cookie, const char *, std::size_t);
+void IONAME(SetSIGN)(Cookie, const char *, std::size_t);
 
-// Data item transfer
-void F18IO(OutputInteger64)(Cookie, std::int64_t);
-std::int64_t F18IO(InputInteger64)(Cookie);
-// &c.
-void F18IO(OutputDescriptor)(Cookie, const Descriptor &);
-void F18IO(InputDescriptor)(Cookie, const Descriptor &);
+// Data item transfer for modes other than namelist.
+// Any item can be transferred by means of a descriptor; unformatted
+// transfers to/from contiguous blocks can avoid the descriptor; and there
+// are specializations for the common scalar types.
+void IONAME(OutputDescriptor)(Cookie, const Descriptor &);
+void IONAME(InputDescriptor)(Cookie, const Descriptor &);
+void IONAME(OutputUnformattedBlock)(Cookie, const char *, std::size_t);
+void IONAME(InputUnformattedBlock)(Cookie, char *, std::size_t);
+void IONAME(OutputInteger64)(Cookie, std::int64_t);
+std::int64_t IONAME(InputInteger64)(Cookie);
+void IONAME(OutputReal64)(Cookie, double);
+double IONAME(InputReal64)(Cookie);
+void IONAME(OutputASCII)(Cookie, const char *, std::size_t);
+void IONAME(InputASCII)(Cookie, char *, std::size_t);
 
-// Result extraction after data transfers
-void F18IO(GetIOMSG)(Cookie, char *, std::size_t);
-int F18IO(GetIOSTAT)(Cookie);
-std::size_t F18IO(GetSIZE)(Cookie);
+// Result extraction after data transfers are complete.
+void IONAME(GetIOMSG)(Cookie, char *, std::size_t);  // IOMSG=
+void IONAME(GetSTATUS)(Cookie, char *, std::size_t);  // STATUS=
+int IONAME(GetIOSTAT)(Cookie);  // IOSTAT=
+std::size_t IONAME(GetSIZE)(Cookie);  // SIZE=
 
-bool F18IO(IsEND)(Cookie);
-bool F18IO(IsERR)(Cookie);
-bool F18IO(IsEOR)(Cookie);
+bool IONAME(IsEND)(Cookie);
+bool IONAME(IsERR)(Cookie);
+bool IONAME(IsEOR)(Cookie);
 
-// The cookie value must not be used after calling either of these.
-int F18IO(LaunchAsynchronousID)(Cookie);  // ID=
-void F18IO(EndIOStatement)(Cookie);
-
-Cookie F18IO(WaitForAsynchronous(ExternalUnit, int id);
-
-// TODO: OPEN, INQUIRE, &c.
+// The cookie value must not be used after calling this.
+void IONAME(EndIOStatement)(Cookie);
 };
 }
 #endif
