@@ -36,7 +36,7 @@ static constexpr ExternalUnit DefaultUnit{-1};  // READ(*), WRITE(*), PRINT
 
 extern "C" {
 
-#define IONAME(n) RTNAME(IO_##n)
+#define IONAME(name) RTNAME(IO_##name)
 
 // These functions initiate data transfer statements (READ, WRITE, PRINT).
 // Example: PRINT *, 666 is implemented as the series of calls:

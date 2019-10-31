@@ -19,5 +19,5 @@
 // (c) prevents incompatible versions of the runtime library from linking
 
 #ifndef RTNAME
-#define RTNAME(n) _F18RTa_##n
+#define RTNAME(name) _F18aRT_##name
 #endif
