@@ -38,7 +38,7 @@ extern "C" {
 
 #define IONAME(n) RTNAME(IO_##n)
 
-// These function initiate data transfer statements (READ, WRITE, PRINT).
+// These functions initiate data transfer statements (READ, WRITE, PRINT).
 // Example: PRINT *, 666 is implemented as the series of calls:
 //   Cookie cookie{BeginExternalListOutput(DefaultUnit)};
 //   OutputInteger64(cookie, 666);
@@ -48,7 +48,8 @@ extern "C" {
 // Internal I/O can loan the runtime library an optional block of memory
 // in which to maintain state across the calls that implement the transfer;
 // use of these blocks can reduce the need for dynamic memory allocation
-// &/or thread-local storage.
+// &/or thread-local storage.  The block must be sufficiently aligned
+// to hold a pointer.
 Cookie IONAME(BeginInternalListOutput)(
   char *internal, std::size_t bytes, int characterKind = 1,
   void **scratchArea = nullptr, std::size_t scratchBytes = 0);
@@ -129,6 +130,9 @@ bool IONAME(IsERR)(Cookie);
 bool IONAME(IsEOR)(Cookie);
 
 // The cookie value must not be used after calling this.
+// If an error has occurred and not been noticed by an inquiry
+// function like GetIOSTAT() or IsERR(), this function can
+// terminate the image.
 void IONAME(EndIOStatement)(Cookie);
 };
 }
