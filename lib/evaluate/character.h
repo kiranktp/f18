@@ -70,6 +70,15 @@ public:
     return str;
   }
 
+  static Character Pad(const Character &str, std::size_t length) {
+    auto oldLength{str.length()};
+    if (length > oldLength) {
+      return str + Character(length - oldLength, Space());
+    } else {
+      return str;
+    }
+  }
+
 private:
   // Following helpers assume that character encodings contain ASCII
   static constexpr CharT Space() { return 0x20; }
