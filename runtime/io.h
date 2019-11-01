@@ -46,34 +46,34 @@ extern "C" {
 
 // Internal I/O initiation
 // Internal I/O can loan the runtime library an optional block of memory
-// in which to maintain state across the calls that implement the transfer;
-// use of these blocks can reduce the need for dynamic memory allocation
-// &/or thread-local storage.  The block must be sufficiently aligned
-// to hold a pointer.
-Cookie IONAME(BeginInternalListOutput)(
-  char *internal, std::size_t bytes, int characterKind = 1,
-  void **scratchArea = nullptr, std::size_t scratchBytes = 0);
-Cookie IONAME(BeginInternalListInput)(
-  char *internal, std::size_t bytes, int characterKind = 1,
-  void **scratchArea = nullptr, std::size_t scratchBytes = 0);
-Cookie IONAME(BeginInternalFormattedOutput)(
-  char *internal, std::size_t bytes,
-  const char *format, std::size_t formatBytes,
-  int characterKind = 1,
-  void **scratchArea = nullptr, std::size_t scratchBytes = 0);
-Cookie IONAME(BeginInternalFormattedInput)(
-  char *internal, std::size_t bytes,
-  const char *format, std::size_t formatBytes,
-  int characterKind = 1,
-  void **scratchArea = nullptr, std::size_t scratchBytes = 0);
+// in which the library can maintain state across the calls that implement
+// the internal transfer; use of these blocks can reduce the need for dynamic
+// memory allocation &/or thread-local storage.  The block must be sufficiently
+// aligned to hold a pointer.
+constexpr std::size_t RecommendedInternalIOScratchAreaBytes(
+    int maxFormatParenthesesNestingDepth) {
+  return 32 + 8 * maxFormatParenthesesNestingDepth;
+}
+Cookie IONAME(BeginInternalListOutput)(char *internal, std::size_t bytes,
+    int characterKind = 1, void **scratchArea = nullptr,
+    std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalListInput)(char *internal, std::size_t bytes,
+    int characterKind = 1, void **scratchArea = nullptr,
+    std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalFormattedOutput)(char *internal, std::size_t bytes,
+    const char *format, std::size_t formatBytes, int characterKind = 1,
+    void **scratchArea = nullptr, std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalFormattedInput)(char *internal, std::size_t bytes,
+    const char *format, std::size_t formatBytes, int characterKind = 1,
+    void **scratchArea = nullptr, std::size_t scratchBytes = 0);
 
 // External synchronous I/O initiation
 Cookie IONAME(BeginExternalListOutput)(ExternalUnit);
 Cookie IONAME(BeginExternalListInput)(ExternalUnit);
-Cookie IONAME(BeginExternalFormattedOutput)(ExternalUnit,
-                                           const char *format, std::size_t);
-Cookie IONAME(BeginExternalFormattedInput)(ExternalUnit,
-                                           const char *format, std::size_t);
+Cookie IONAME(BeginExternalFormattedOutput)(
+    ExternalUnit, const char *format, std::size_t);
+Cookie IONAME(BeginExternalFormattedInput)(
+    ExternalUnit, const char *format, std::size_t);
 Cookie IONAME(BeginUnformattedOutput)(ExternalUnit);
 Cookie IONAME(BeginUnformattedInput)(ExternalUnit);
 Cookie IONAME(BeginNamelistOutput)(ExternalUnit, const NamelistGroup &);
@@ -81,8 +81,10 @@ Cookie IONAME(BeginNamelistInput)(ExternalUnit, const NamelistGroup &);
 
 // Asynchronous I/O is supported (at most) for unformatted direct access
 // block transfers.
-AsynchronousID IONAME(BeginAsynchronousOutput)(ExternalUnit, std::int64_t REC, const char *, std::size_t);
-AsynchronousID IONAME(BeginAsynchronousInput)(ExternalUnit, std::int64_t REC, char *, std::size_t);
+AsynchronousID IONAME(BeginAsynchronousOutput)(
+    ExternalUnit, std::int64_t REC, const char *, std::size_t);
+AsynchronousID IONAME(BeginAsynchronousInput)(
+    ExternalUnit, std::int64_t REC, char *, std::size_t);
 Cookie IONAME(WaitForAsynchronousIO)(ExternalUnit, AsynchronousID);  // WAIT
 
 // Other I/O statements
@@ -93,8 +95,8 @@ Cookie IONAME(BeginBackspace)(ExternalUnit);
 Cookie IONAME(BeginEndfile)(ExternalUnit);
 Cookie IONAME(BeginRewind)(ExternalUnit);
 
-// Control list options
-void IONAME(SetADVANCE)(Cookie, const char *, std::size_t);
+gggg  // Control list options
+    void IONAME(SetADVANCE)(Cookie, const char *, std::size_t);
 void IONAME(SetBLANK)(Cookie, const char *, std::size_t);
 void IONAME(SetDECIMAL)(Cookie, const char *, std::size_t);
 void IONAME(SetDELIM)(Cookie, const char *, std::size_t);
@@ -108,16 +110,20 @@ void IONAME(SetSIGN)(Cookie, const char *, std::size_t);
 // Any item can be transferred by means of a descriptor; unformatted
 // transfers to/from contiguous blocks can avoid the descriptor; and there
 // are specializations for the common scalar types.
-void IONAME(OutputDescriptor)(Cookie, const Descriptor &);
-void IONAME(InputDescriptor)(Cookie, const Descriptor &);
-void IONAME(OutputUnformattedBlock)(Cookie, const char *, std::size_t);
-void IONAME(InputUnformattedBlock)(Cookie, char *, std::size_t);
-void IONAME(OutputInteger64)(Cookie, std::int64_t);
-std::int64_t IONAME(InputInteger64)(Cookie);
-void IONAME(OutputReal64)(Cookie, double);
+// Functions with Boolean results return false when the I/O statement
+// has encountered an error or end-of-file/record condition.
+bool IONAME(OutputDescriptor)(Cookie, const Descriptor &);
+bool IONAME(InputDescriptor)(Cookie, const Descriptor &);
+bool IONAME(OutputUnformattedBlock)(Cookie, const char *, std::size_t);
+bool IONAME(InputUnformattedBlock)(Cookie, char *, std::size_t);
+bool IONAME(OutputInteger64)(Cookie, std::int64_t);
+std::int64_t IONAME(InputInteger64)(Cookie, int kind = 8);
+bool IONAME(OutputReal32)(Cookie, float);
+float IONAME(InputReal32)(Cookie);
+bool IONAME(OutputReal64)(Cookie, double);
 double IONAME(InputReal64)(Cookie);
-void IONAME(OutputASCII)(Cookie, const char *, std::size_t);
-void IONAME(InputASCII)(Cookie, char *, std::size_t);
+bool IONAME(OutputASCII)(Cookie, const char *, std::size_t);
+bool IONAME(InputASCII)(Cookie, char *, std::size_t);
 
 // Result extraction after data transfers are complete.
 void IONAME(GetIOMSG)(Cookie, char *, std::size_t);  // IOMSG=
@@ -126,14 +132,15 @@ int IONAME(GetIOSTAT)(Cookie);  // IOSTAT=
 std::size_t IONAME(GetSIZE)(Cookie);  // SIZE=
 
 bool IONAME(IsEND)(Cookie);
-bool IONAME(IsERR)(Cookie);
 bool IONAME(IsEOR)(Cookie);
+bool IONAME(IsERR)(Cookie);
 
-// The cookie value must not be used after calling this.
+// The cookie value must not be used after calling this function.
 // If an error has occurred and not been noticed by an inquiry
-// function like GetIOSTAT() or IsERR(), this function can
-// terminate the image.
-void IONAME(EndIOStatement)(Cookie);
+// function like GetIOSTAT() or IsERR(), this function will
+// terminate the image with a message.
+void IONAME(EndIOStatement)(
+    Cookie, const char *sourceFileName = nullptr, int lineNumber = 0);
 };
 }
 #endif
