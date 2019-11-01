@@ -67,6 +67,20 @@ Cookie IONAME(BeginInternalFormattedInput)(char *internal, std::size_t bytes,
     const char *format, std::size_t formatBytes, int characterKind = 1,
     void **scratchArea = nullptr, std::size_t scratchBytes = 0);
 
+// Internal I/O to/from character arrays (derived type child I/O can
+// process multiple records).  The passed descriptor must remain
+// unchanged until the I/O statement is complete.
+Cookie IONAME(BeginInternalArrayListOutput)(const Descriptor &,
+    void **scratchArea = nullptr, std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalArrayListInput)(const Descriptor &,
+    void **scratchArea = nullptr, std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalArrayFormattedOutput)(const Descriptor &,
+    const char *format, std::size_t formatBytes, void **scratchArea = nullptr,
+    std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalArrayFormattedInput)(const Descriptor &,
+    const char *format, std::size_t formatBytes, void **scratchArea = nullptr,
+    std::size_t scratchBytes = 0);
+
 // External synchronous I/O initiation
 Cookie IONAME(BeginExternalListOutput)(ExternalUnit);
 Cookie IONAME(BeginExternalListInput)(ExternalUnit);
@@ -122,6 +136,8 @@ bool IONAME(OutputReal32)(Cookie, float);
 float IONAME(InputReal32)(Cookie);
 bool IONAME(OutputReal64)(Cookie, double);
 double IONAME(InputReal64)(Cookie);
+bool IONAME(OutputComplex32)(Cookie, float, float);
+bool IONAME(OutputComplex64)(Cookie, double, double);
 bool IONAME(OutputASCII)(Cookie, const char *, std::size_t);
 bool IONAME(InputASCII)(Cookie, char *, std::size_t);
 
