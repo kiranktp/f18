@@ -119,7 +119,7 @@ module m
   character(*), parameter :: c3 = "excalibur", c4="z", c5="epsilon"
   character(*), parameter :: res_max_c = max(c1, c2, c3, c4, c5)
   character(*), parameter :: res_min_c = min(c1, c2, c3, c4, c5)
-  ! lenght of result is length of longest arguments!
+  ! length of result is length of longest arguments!
   character(len(c3)), parameter :: exp_min = c1
   character(len(c3)), parameter :: exp_max = c4
   logical, parameter :: test_max_c_1 = res_max_c.EQ.exp_max

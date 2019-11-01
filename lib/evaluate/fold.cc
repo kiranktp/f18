@@ -537,7 +537,7 @@ Expr<T> FoldMINorMAX(
       return Expr<T>(std::move(funcRef));
     }
   }
-  CHECK(constantArgs.size() >= 2);
+  CHECK(constantArgs.size() > 0);
   Expr<T> result{std::move(*constantArgs[0])};
   for (std::size_t i{1}; i < constantArgs.size(); ++i) {
     Extremum<T> extremum{order, result, Expr<T>{std::move(*constantArgs[i])}};
@@ -2387,8 +2387,9 @@ Expr<T> FoldOperation(FoldingContext &context, Extremum<T> &&x) {
       auto maxLen{std::max(folded->first.length(), folded->second.length())};
       bool isFirst{x.ordering == Compare(folded->first, folded->second)};
       auto res{isFirst ? std::move(folded->first) : std::move(folded->second)};
-      res = res.length() == maxLen ? std::move(res)
-                                   : CharacterUtils<T::kind>::Pad(res, maxLen);
+      res = res.length() == maxLen
+          ? std::move(res)
+          : CharacterUtils<T::kind>::Resize(res, maxLen);
       return Expr<T>{Constant<T>{std::move(res)}};
     }
     return Expr<T>{Constant<T>{folded->second}};

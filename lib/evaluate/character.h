@@ -70,12 +70,14 @@ public:
     return str;
   }
 
-  static Character Pad(const Character &str, std::size_t length) {
+  // Resize adds spaces on the right if the new size is bigger than the
+  // original, or by trimming the rightmost characters otherwise.
+  static Character Resize(const Character &str, std::size_t newLength) {
     auto oldLength{str.length()};
-    if (length > oldLength) {
-      return str + Character(length - oldLength, Space());
+    if (newLength > oldLength) {
+      return str + Character(newLength - oldLength, Space());
     } else {
-      return str;
+      return str.substr(0, newLength);
     }
   }
 
