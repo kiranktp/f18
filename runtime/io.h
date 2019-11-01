@@ -54,22 +54,23 @@ constexpr std::size_t RecommendedInternalIOScratchAreaBytes(
     int maxFormatParenthesesNestingDepth) {
   return 32 + 8 * maxFormatParenthesesNestingDepth;
 }
-Cookie IONAME(BeginInternalListOutput)(char *internal, std::size_t bytes,
-    int characterKind = 1, void **scratchArea = nullptr,
-    std::size_t scratchBytes = 0);
-Cookie IONAME(BeginInternalListInput)(char *internal, std::size_t bytes,
-    int characterKind = 1, void **scratchArea = nullptr,
-    std::size_t scratchBytes = 0);
-Cookie IONAME(BeginInternalFormattedOutput)(char *internal, std::size_t bytes,
-    const char *format, std::size_t formatBytes, int characterKind = 1,
-    void **scratchArea = nullptr, std::size_t scratchBytes = 0);
-Cookie IONAME(BeginInternalFormattedInput)(char *internal, std::size_t bytes,
-    const char *format, std::size_t formatBytes, int characterKind = 1,
-    void **scratchArea = nullptr, std::size_t scratchBytes = 0);
 
-// Internal I/O to/from character arrays (derived type child I/O can
-// process multiple records).  The passed descriptor must remain
-// unchanged until the I/O statement is complete.
+// Internal I/O to/from a default-kind character scalar can avoid a
+// descriptor.
+Cookie IONAME(BeginInternalListOutput)(char *internal, std::size_t bytes,
+    void **scratchArea = nullptr, std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalListInput)(char *internal, std::size_t bytes,
+    void **scratchArea = nullptr, std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalFormattedOutput)(char *internal, std::size_t bytes,
+    const char *format, std::size_t formatBytes, void **scratchArea = nullptr,
+    std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalFormattedInput)(char *internal, std::size_t bytes,
+    const char *format, std::size_t formatBytes, void **scratchArea = nullptr,
+    std::size_t scratchBytes = 0);
+
+// Internal I/O to/from character arrays &/or non-default-kind character
+// requires a descriptor, which must remain unchanged until the I/O
+// statement is complete.
 Cookie IONAME(BeginInternalArrayListOutput)(const Descriptor &,
     void **scratchArea = nullptr, std::size_t scratchBytes = 0);
 Cookie IONAME(BeginInternalArrayListInput)(const Descriptor &,
