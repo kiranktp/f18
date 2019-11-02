@@ -81,6 +81,12 @@ Cookie IONAME(BeginInternalArrayFormattedOutput)(const Descriptor &,
 Cookie IONAME(BeginInternalArrayFormattedInput)(const Descriptor &,
     const char *format, std::size_t formatBytes, void **scratchArea = nullptr,
     std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalArrayNamelistOutput)(const Descriptor &,
+    const NamelistGroup &, void **scratchArea = nullptr,
+    std::size_t scratchBytes = 0);
+Cookie IONAME(BeginInternalArrayNamelistInput)(const Descriptor &,
+    const NamelistGroup &, void **scratchArea = nullptr,
+    std::size_t scratchBytes = 0);
 
 // External synchronous I/O initiation
 Cookie IONAME(BeginExternalListOutput)(ExternalUnit);
@@ -110,8 +116,8 @@ Cookie IONAME(BeginBackspace)(ExternalUnit);
 Cookie IONAME(BeginEndfile)(ExternalUnit);
 Cookie IONAME(BeginRewind)(ExternalUnit);
 
-gggg  // Control list options
-    void IONAME(SetADVANCE)(Cookie, const char *, std::size_t);
+// Control list options
+void IONAME(SetADVANCE)(Cookie, const char *, std::size_t);
 void IONAME(SetBLANK)(Cookie, const char *, std::size_t);
 void IONAME(SetDECIMAL)(Cookie, const char *, std::size_t);
 void IONAME(SetDELIM)(Cookie, const char *, std::size_t);
@@ -126,7 +132,8 @@ void IONAME(SetSIGN)(Cookie, const char *, std::size_t);
 // transfers to/from contiguous blocks can avoid the descriptor; and there
 // are specializations for the common scalar types.
 // Functions with Boolean results return false when the I/O statement
-// has encountered an error or end-of-file/record condition.
+// has encountered an error or end-of-file/record condition; the others
+// will return a zero value.
 bool IONAME(OutputDescriptor)(Cookie, const Descriptor &);
 bool IONAME(InputDescriptor)(Cookie, const Descriptor &);
 bool IONAME(OutputUnformattedBlock)(Cookie, const char *, std::size_t);
@@ -141,13 +148,16 @@ bool IONAME(OutputComplex32)(Cookie, float, float);
 bool IONAME(OutputComplex64)(Cookie, double, double);
 bool IONAME(OutputASCII)(Cookie, const char *, std::size_t);
 bool IONAME(InputASCII)(Cookie, char *, std::size_t);
+bool IONAME(OutputLogical)(Cookie, bool);
+bool IONAME(InputLogical)(Cookie);
 
-// Result extraction after data transfers are complete.
+// Result extraction; these can be called at any time during an
+// I/O data transfer statement to check for errors, or after all
+// of the data transfers are complete to acquire the final status.
 void IONAME(GetIOMSG)(Cookie, char *, std::size_t);  // IOMSG=
 void IONAME(GetSTATUS)(Cookie, char *, std::size_t);  // STATUS=
 int IONAME(GetIOSTAT)(Cookie);  // IOSTAT=
 std::size_t IONAME(GetSIZE)(Cookie);  // SIZE=
-
 bool IONAME(IsEND)(Cookie);
 bool IONAME(IsEOR)(Cookie);
 bool IONAME(IsERR)(Cookie);
