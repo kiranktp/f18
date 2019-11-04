@@ -81,10 +81,12 @@ Cookie IONAME(BeginInternalArrayFormattedOutput)(const Descriptor &,
 Cookie IONAME(BeginInternalArrayFormattedInput)(const Descriptor &,
     const char *format, std::size_t formatBytes, void **scratchArea = nullptr,
     std::size_t scratchBytes = 0);
-Cookie IONAME(BeginInternalArrayNamelistOutput)(const Descriptor &,
+
+// Internal namelist I/O
+Cookie IONAME(BeginInternalNamelistOutput)(const Descriptor &,
     const NamelistGroup &, void **scratchArea = nullptr,
     std::size_t scratchBytes = 0);
-Cookie IONAME(BeginInternalArrayNamelistInput)(const Descriptor &,
+Cookie IONAME(BeginInternalNamelistInput)(const Descriptor &,
     const NamelistGroup &, void **scratchArea = nullptr,
     std::size_t scratchBytes = 0);
 
