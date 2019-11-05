@@ -1192,7 +1192,7 @@ void OmpVisitor::ResolveOmpObject(
               // appeared in the list
               for (const Symbol &object :
                   symbol->get<CommonBlockDetails>().objects()) {
-                Symbol &mutableObject{*const_cast<Symbol *>(&object)};
+                Symbol &mutableObject{const_cast<Symbol &>(object)};
                 ResolveOmp(mutableObject, ompFlag);
               }
             } else {

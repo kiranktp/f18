@@ -304,14 +304,13 @@ private:
 
 class CommonBlockDetails {
 public:
-  std::list<SymbolRef> &objects() { return objects_; }
-  const std::list<SymbolRef> &objects() const { return objects_; }
+  const SymbolVector &objects() const { return objects_; }
   void add_object(const Symbol &object) { objects_.emplace_back(object); }
   MaybeExpr bindName() const { return bindName_; }
   void set_bindName(MaybeExpr &&expr) { bindName_ = std::move(expr); }
 
 private:
-  std::list<SymbolRef> objects_;
+  SymbolVector objects_;
   MaybeExpr bindName_;
 };
 
